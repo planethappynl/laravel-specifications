@@ -3,7 +3,9 @@
 namespace DangerWayne\Specification\Providers;
 
 use DangerWayne\Specification\Console\Commands\SpecificationMakeCommand;
+use DangerWayne\Specification\Contracts\SpecificationInterface;
 use DangerWayne\Specification\Specifications\Builders\SpecificationBuilder;
+use DangerWayne\Specification\Specifications\Composites\NotSpecification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\ServiceProvider;
@@ -44,17 +46,29 @@ class SpecificationServiceProvider extends ServiceProvider
     private function registerMacros(): void
     {
         // Add Collection macro
-        Collection::macro('whereSpecification', function ($specification) {
-            /** @var \Illuminate\Support\Collection $this */
+        Collection::macro('whereSpecification', function (SpecificationInterface $specification): Collection {
+            /** @var Collection $this */
             return $this->filter(function ($item) use ($specification) {
                 return $specification->isSatisfiedBy($item);
             });
         });
 
+        Collection::macro('whereNotSpecification', function (SpecificationInterface $specification): Collection {
+            /** @var Collection $this */
+            return $this->filter(function ($item) use ($specification) {
+                return (new NotSpecification($specification))->isSatisfiedBy($item);
+            });
+        });
+
         // Add Builder macro
-        Builder::macro('whereSpecification', function ($specification) {
-            /** @var \Illuminate\Database\Eloquent\Builder $this */
+        Builder::macro('whereSpecification', function (SpecificationInterface $specification): Builder {
+            /** @var Builder $this */
             return $specification->toQuery($this);
+        });
+
+        Builder::macro('whereNotSpecification', function (SpecificationInterface $specification): Builder {
+            /** @var Builder $this */
+            return (new NotSpecification($specification))->toQuery($this);
         });
     }
 }
