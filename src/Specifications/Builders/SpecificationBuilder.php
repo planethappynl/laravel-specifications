@@ -76,7 +76,7 @@ class SpecificationBuilder
         return $this->specification;
     }
 
-    private function addSpecification(SpecificationInterface $spec): self
+    public function addSpecification(SpecificationInterface $spec): self
     {
         if (! $this->specification) {
             $this->specification = $spec;
